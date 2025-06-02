@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spotify Display Settings</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Spotify Display Settings</h1>
+
+    <div class="card">
+        <h2>Registered Accounts</h2>
+        {% if accounts %}
+            <ul>
+                {% for account in accounts %}
+                    <li>
+                        {{ account.name }}
+                        {% if current_account_name and current_account_name == account.name %}
+                            <span class="status-active">(Active on Display)</span>
+                        {% endif %}
+                        <div class="account-actions">
+                            <a href="{{ url_for('set_current_account', index=loop.index0) }}" class="button set-active-button">Set Active</a>
+                            <a href="{{ url_for('delete_account', index=loop.index0) }}" class="button delete-button" onclick="return confirm('Are you sure you want to delete {{ account.name }}? This will also remove its stored authentication. ');">Delete</a>
+                        </div>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No Spotify accounts registered yet.</p>
+        {% endif %}
+        <a href="{{ url_for('add_account') }}" class="button primary-button add-account-button">Add New Account</a>
+    </div>
+
+    <div class="card">
+        <h2>About This Device</h2>
+        <p>This is your Raspberry Pi Spotify e-ink display device.</p>
+        <p>Ensure it's connected to the same Wi-Fi network as this device to manage settings.</p>
+        <p>The display automatically refreshes music information when the active account changes or music plays.</p>
+        <p>This settings page is designed to be always available for debugging and management.</p>
+    </div>
+</body>
+</html>
