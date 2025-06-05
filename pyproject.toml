@@ -1,22 +1,27 @@
-[project]
-name = "spotify-player-rpi"
+[tool.poetry]
+name = "spotify-eink-display"
 version = "0.1.0"
-description = ""
-authors = [
-    {name = "Your Name",email = "you@example.com"}
-]
+description = "A Spotify music display project for Raspberry Pi Zero 2 W with e-ink."
+authors = ["Your Name <you@example.com>"]
 readme = "README.md"
-requires-python = "^3.9"
-dependencies = [
-    "flask (>=3.1.1,<4.0.0)",
-    "spotipy (>=2.25.1,<3.0.0)",
-    "pillow (>=11.2.1,<12.0.0)",
-    "qrcode (>=8.2,<9.0)",
-    "rpi-gpio (>=0.7.1,<0.8.0)",
-    "spidev (>=3.7,<4.0)"
-]
+homepage = "https://github.com/your-username/spotify-eink-display"
+repository = "https://github.com/your-username/spotify-eink-display"
+license = ""
+
+packages = [{include = "spotify_player_rpi", from = "src"}]
+
+[tool.poetry.dependencies]
+python = "==3.9.11"
+flask = ">=3.1.1,<4.0.0"
+spotipy = ">=2.25.1,<3.0.0"
+pillow = ">=11.2.1,<12.0.0"
+qrcode = ">=8.2,<9.0"
+rpi-gpio = ">=0.7.1,<0.8.0"
+spidev = ">=3.7,<4.0"
+python-dotenv = ">=1.0.0,<2.0.0"
+
 
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
