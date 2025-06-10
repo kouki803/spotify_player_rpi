@@ -2,7 +2,7 @@
 from flask import Flask, render_template, request, redirect, url_for, session, make_response
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import config
+import spotify_player_rpi.config as config
 import json
 import os
 import sys
