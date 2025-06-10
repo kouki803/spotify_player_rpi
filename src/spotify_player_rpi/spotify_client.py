@@ -6,8 +6,7 @@ import spotify_player_rpi.config as config # config.py から認証情報を読�
 
 import json
 import os
-import sys
-import time
+
 
 class SpotifyClient:
     def __init__(self, accounts_file='accounts.json'):

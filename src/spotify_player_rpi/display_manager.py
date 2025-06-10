@@ -1,13 +1,6 @@
-# display_manager.py
-import sys
-import os
 from PIL import Image, ImageDraw, ImageFont
 
-# Add Waveshare e-Paper library path to sys.path
-# This assumes the 'lib' directory is a sibling to this script.
-sys.path.append(os.path.join(os.path.dirname(__file__), 'lib'))
-
-from waveshare_epd import epd2in13_V2 # For 2.13inch V2 display (adjust if using a different model)
+from spotify_player_rpi.lib.waveshare_epd import epd2in13_V2 # For 2.13inch V2 display (adjust if using a different model)
 
 class DisplayManager:
     def __init__(self):

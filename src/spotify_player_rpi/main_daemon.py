@@ -3,9 +3,9 @@ import time
 import qrcode
 from PIL import Image, ImageDraw, ImageFont
 import RPi.GPIO as GPIO
-import config
-from display_manager import DisplayManager
-from spotify_client import SpotifyClient
+import spotify_player_rpi.config as config
+from spotify_player_rpi.display_manager import DisplayManager
+from spotify_player_rpi.spotify_client import SpotifyClient
 import os
 import json
 # import subprocess # Webサーバーの制御をしないため不要

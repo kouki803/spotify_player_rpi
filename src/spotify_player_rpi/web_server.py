@@ -5,7 +5,6 @@ from spotipy.oauth2 import SpotifyOAuth
 import spotify_player_rpi.config as config
 import json
 import os
-import sys
 
 app = Flask(__name__)
 # Flask's secret_key is crucial for session security (e.g., flash messages, CSRF protection).

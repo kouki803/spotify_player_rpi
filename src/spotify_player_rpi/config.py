@@ -15,12 +15,16 @@ if not SPOTIPY_CLIENT_ID or not SPOTIPY_CLIENT_SECRET:
 # Spotify API Scopes
 SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing"
 
-# e-ink display settings
-E_PAPER_LIB_PATH = './lib/'
-
 # GPIO Pin Configuration (BCM numbering)
 BUTTON_PLAY_PAUSE_PIN = 23
 BUTTON_SWITCH_ACCOUNT_PIN = 24
 
 # Web Server Settings
 WEB_SERVER_LIFETIME = 300
+
+if __name__ == '__main__':
+    print("--- config.py Debug Test ---")
+    print(f"SPOTIPY_CLIENT_ID: {SPOTIPY_CLIENT_ID if SPOTIPY_CLIENT_ID else 'NOT SET'}")
+    print(f"SPOTIPY_CLIENT_SECRET: {'***' if SPOTIPY_CLIENT_SECRET else 'NOT SET'}")
+    print(f"SPOTIPY_REDIRECT_URI: {SPOTIPY_REDIRECT_URI}")
+    print("--- Test Complete ---")
