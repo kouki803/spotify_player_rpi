@@ -1,7 +1,8 @@
 # spotify_client.py
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
-import config # config.py から認証情報を読み込む
+
+import spotify_player_rpi.config as config # config.py から認証情報を読み込む
 
 import json
 import os
@@ -43,7 +44,6 @@ class SpotifyClient:
             json.dump(self.accounts_data, f, indent=4)
         print("User accounts saved.")
 
-    # app_keys_exist, set_app_keys, get_app_keys は削除
 
     def set_current_account(self, index):
         """
@@ -134,7 +134,7 @@ class SpotifyClient:
         self.sp = None
         self.sp_oauth = None
         return False
-
+    
     def add_user_account_token(self, user_name, access_token, refresh_token, expires_at):
         """
         Adds or updates a user account with provided token info.
@@ -203,9 +203,7 @@ class SpotifyClient:
     # get_current_playback, toggle_playback は変更なし (self.sp を利用)
     # ただし、get_current_playbackの最初でClient ID/Secretの存在チェックを追加
     def get_current_playback(self):
-        if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
-            print("Spotify Client ID/Secret not set. Cannot get playback info.")
-            return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
+        """Retrieves the current playback state from Spotify API."""
         if self.sp is None:
             return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
         # ... (以下、既存のロジック) ...
