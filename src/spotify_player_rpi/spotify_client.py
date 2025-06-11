@@ -7,6 +7,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 import spotify_player_rpi.config as config # config.py からAPI認証情報を読み込む
+from spotify_player_rpi.types import PlaybackInfo
 
 
 class SpotifyClient:
@@ -226,56 +227,56 @@ class SpotifyClient:
         print(f"INFO: Attempting to switch to next user account (index: {next_index})...")
         return self.set_current_account(next_index)
 
-    # get_current_playback, toggle_playback は変更なし (self.sp を利用)
-    # ただし、get_current_playbackの最初でClient ID/Secretの存在チェックを追加
-    def get_current_playback(self):
-        """Retrieves the current playback state from Spotify API."""
+    def get_current_playback(self) -> PlaybackInfo:
+        """Spotify APIから現在の再生状態を取得する。"""
+        if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
+            print("ERROR: Spotify Client ID/Secret not set. Cannot get playback info.")
+            return PlaybackInfo(track_name="", artist_name="", is_playing=False)           
         if self.sp is None:
-            return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
+            print("ERROR: Spotify client not authenticated. Cannot get playback info.")
+            return PlaybackInfo(track_name="", artist_name="", is_playing=False)
         
         try:
-            # Check token expiration and refresh if necessary before making API call
-            token_info = self.sp_oauth.get_cached_token()
-            if token_info and self.sp_oauth.is_token_expired(token_info):
-                print("Access token expired during playback check, refreshing...")
-                token_info = self.sp_oauth.refresh_access_token(token_info['refresh_token'])
-                self.sp = spotipy.Spotify(auth=token_info['access_token'])
-                # Update accounts_data with refreshed token info
-                self.accounts_data[self.current_account_index].update({
-                    "access_token": token_info['access_token'],
-                    "expires_at": token_info['expires_at'],
-                    "refresh_token": token_info['refresh_token']
-                })
-                self._save_accounts()
-
+            # トークン自動更新のロジック
+            # spotipyはget_cached_token()とrefresh_access_token()で自動的に処理するため、
+            # ここではAPI呼び出し時にエラーが発生した場合の再認証を主に行う
+            
             playback = self.sp.current_playback()
-            if playback and playback['is_playing']:
-                track = playback['item']
-                track_name = track['name']
-                artist_name = ", ".join([artist['name'] for artist in track['artists']])
-                track_url = track['external_urls']['spotify']
-                return {
-                    'track_name': track_name,
-                    'artist_name': artist_name,
-                    'track_url': track_url,
-                    'is_playing': True
-                }
-            elif playback and not playback['is_playing']:
-                return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
-            else: # No playback found
-                return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
+            if playback: # playbackがNoneでないことを確認
+                if playback['is_playing']:
+                    track = playback['item']
+                    track_name = track['name']
+                    artist_name = ", ".join([artist['name'] for artist in track['artists']])
+                    track_url = track['external_urls']['spotify']
+                    print(f"INFO: Currently playing: '{track_name}' by '{artist_name}'.")
+                    return PlaybackInfo(
+                        track_name=track_name,
+                        artist_name=artist_name,
+                        track_url=track_url,
+                        is_playing=True
+                    )
+                else:
+                    print("INFO: Music is paused or not playing.")
+                    return PlaybackInfo(
+                        track_name=track_name,
+                        artist_name=artist_name,
+                        track_url=track_url,
+                        is_playing=False
+                    )
+            else:
+                print("INFO: No playback context found.")
+                return PlaybackInfo(track_name="", artist_name="", is_playing=False)
+
         except spotipy.exceptions.SpotifyException as e:
             print(f"Spotify API Error during playback check: {e}")
             if "expired token" in str(e).lower() or "invalid_grant" in str(e).lower():
-                print("Current account token might be invalid or expired. Attempting to re-authenticate current account.")
-                self.set_current_account(self.current_account_index) # Try to re-authenticate
-            self.sp = None # Ensure sp is None if authentication fails
-            return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
+            return PlaybackInfo(track_name="", artist_name="", is_playing=False)
+
         except Exception as e:
             print(f"An unexpected error occurred during playback check: {e}")
             self.sp = None
-            return {'is_playing': False, 'track_name': None, 'artist_name': None, 'track_url': None}
-         
+            return PlaybackInfo(track_name="", artist_name="", is_playing=False)
+            
     def toggle_playback(self):
         """Toggles playback (play/pause) on Spotify."""
         if self.sp is None:
