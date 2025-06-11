@@ -304,3 +304,66 @@ class SpotifyClient:
                 self.set_current_account(self.current_account_index)
         except Exception as e:
             print(f"FATAL ERROR: An unexpected error occurred toggling playback: {e}")
+
+
+
+if __name__ == '__main__':
+    print("--- spotify_client.py Debug Test ---")
+    print("This test verifies Spotify API client functionality including authentication and playback.")
+    print("Ensure .env file is configured and accounts.json has at least one user account.")
+
+    client = SpotifyClient()
+    
+    if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
+        print("\n[SETUP REQUIRED] Spotify Client ID/Secret not set in .env. Skipping Spotify API tests.")
+        print("Please edit your .env file in the project root (~/codes/spotify_player_rpi/.env) and set SPOTIPY_CLIENT_ID and SPOTIPY_CLIENT_SECRET.")
+        print("Example: SPOTIPY_CLIENT_ID=YOUR_ID\n         SPOTIPY_CLIENT_SECRET=YOUR_SECRET")
+    elif not client.accounts_data:
+        print("\n[SETUP REQUIRED] No user accounts found in accounts.json. Skipping Spotify API tests.")
+        print("Please run 'poetry run python get_tokens.py' to add an account automatically.")
+    else:
+        print("\n--- Testing Account Authentication and Playback ---")
+        for i, account in enumerate(client.accounts_data):
+            account_name = account.get('name', f"Unnamed Account {i}")
+            print(f"\n--- Testing Account '{account_name}' (Index: {i}) ---")
+            
+            if client.set_current_account(i):
+                print(f"Successfully authenticated '{account_name}'.")
+                
+                # Test playback state multiple times to check refresh logic
+                print("\nAttempting to get current playback (x3) to test refresh...")
+                for _ in range(3):
+                    playback = client.get_current_playback()
+                    if playback['is_playing']:
+                        print(f"  > Playing: {playback['track_name']} by {playback['artist_name']}")
+                    else:
+                        print("  > Not playing.")
+                    time.sleep(5) 
+                
+                # Test toggle playback (user interaction)
+                toggle_choice = input(f"\nDo you want to toggle playback for '{account_name}'? (y/n): ").lower()
+                if toggle_choice == 'y':
+                    client.toggle_playback()
+                    time.sleep(2)
+                    client.toggle_playback() # もう一度トグルして元に戻す（希望があれば）
+                else:
+                    print("Skipping playback toggle.")
+            else:
+                print(f"Failed to authenticate '{account_name}'. Token might be expired or invalid. Try running 'get_tokens.py' again.")
+        
+        # Test switching to next account via method
+        if len(client.accounts_data) > 1:
+            print("\n--- Testing switch_to_next_account() ---")
+            initial_index = client.current_account_index
+            print(f"Current active index: {initial_index}")
+            if client.switch_to_next_account():
+                print(f"Switched to next account successfully. New active index: {client.current_account_index}")
+            else:
+                print("Failed to switch to next account.")
+            # 元に戻す
+            if client.set_current_account(initial_index):
+                print(f"Switched back to initial account: {client.current_account_index}")
+            else:
+                print("Failed to switch back.")
+
+    print("\n--- Test Complete ---")
