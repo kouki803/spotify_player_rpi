@@ -1,5 +1,5 @@
 **/__pycache__/**
 accounts.json
 .venv
-accounts.json
 .env
+.spotify_cache_*
