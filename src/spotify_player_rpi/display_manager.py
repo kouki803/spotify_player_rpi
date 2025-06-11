@@ -114,3 +114,43 @@ class DisplayManager:
             print(f"Error during e-ink display Dev_exit/module_exit: {e}")
         
 
+if __name__ == '__main__':
+    import time
+    # HardwareControllerを初期化して、DisplayManagerにGPIO設定がなされている状態を作る
+    hc = HardwareController() 
+
+    print("--- display_manager.py Debug Test ---")
+    print("Attempting to initialize e-ink display...")
+    dm = DisplayManager() 
+    
+    if dm.epd: # Raspberry Pi環境
+        try:
+            dm.display_info("Test Song (Real)", "Test Artist (Real)", None)
+            print("Displayed test info. Waiting 3 seconds...")
+            time.sleep(3)
+            dm.clear_display()
+            print("Cleared display. Waiting 3 seconds...")
+            time.sleep(3)
+            dm.sleep()
+            print("Display put to sleep. Test complete.")
+        except Exception as e:
+            print(f"Error during real display test: {e}")
+        finally:
+            dm.close() 
+            hc.cleanup_gpio() 
+
+    else: # Raspberry Pi以外の環境（モック）の場合
+        try:
+            dm.display_info("Test Song (Mock)", "Test Artist (Mock)", None)
+            print("Displayed mock info. Waiting 3 seconds...")
+            time.sleep(3)
+            dm.clear_display()
+            print("Cleared mock display. Waiting 3 seconds...")
+            time.sleep(3)
+            dm.sleep()
+            print("Mock Display test complete.")
+        except Exception as e:
+            print(f"Error during mock display test: {e}")
+        finally:
+            hc.cleanup_gpio() 
+    print("--- Test Complete ---")
