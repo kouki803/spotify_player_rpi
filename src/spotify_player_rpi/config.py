@@ -23,6 +23,8 @@ SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently
 # GPIO Pin Configuration (BCM numbering)
 BUTTON_PLAY_PAUSE_PIN = 23
 BUTTON_SWITCH_ACCOUNT_PIN = 24
+BUTTON_DEBOUNCE_TIME = 300 # ボタンのチャタリング防止時間 (ms)
+
 
 # Web Server Settings
 WEB_SERVER_LIFETIME = 300
