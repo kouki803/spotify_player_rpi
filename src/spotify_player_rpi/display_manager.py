@@ -1,8 +1,12 @@
 from PIL import Image, ImageDraw, ImageFont
 
-from spotify_player_rpi.lib.waveshare_epd import epd2in13_V2 # For 2.13inch V2 display (adjust if using a different model)
+
+from spotify_player_rpi.hardware_controller import HardwareController
+
 
 class DisplayManager:
+    IS_RPI = HardwareController.IS_RPI # Raspberry Pi環境かどうかを示すフラグ
+
     def __init__(self):
         self.epd = epd2in13_V2.EPD()
         self.epd.init()
