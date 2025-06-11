@@ -268,33 +268,39 @@ class SpotifyClient:
                 return PlaybackInfo(track_name="", artist_name="", is_playing=False)
 
         except spotipy.exceptions.SpotifyException as e:
-            print(f"Spotify API Error during playback check: {e}")
+            print(f"ERROR: Spotify API Error during playback check: {e}")
             if "expired token" in str(e).lower() or "invalid_grant" in str(e).lower():
+                print("INFO: Current user account token might be invalid or expired. Attempting to re-authenticate current account.")
+                self.set_current_account(self.current_account_index) # トークン無効なら再認証を試みる
+            self.sp = None # 認証失敗時はSpotifyクライアントをリセット
             return PlaybackInfo(track_name="", artist_name="", is_playing=False)
 
         except Exception as e:
-            print(f"An unexpected error occurred during playback check: {e}")
+            print(f"FATAL ERROR: An unexpected error occurred during playback check: {e}")
             self.sp = None
             return PlaybackInfo(track_name="", artist_name="", is_playing=False)
             
     def toggle_playback(self):
-        """Toggles playback (play/pause) on Spotify."""
+        """Spotifyで再生/一時停止を切り替える。"""
+        if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
+            print("ERROR: Spotify Client ID/Secret not set. Cannot toggle playback.")
+            return
         if self.sp is None:
-            print("Spotify client not authenticated. Cannot toggle playback.")
+            print("ERROR: Spotify client not authenticated. Cannot toggle playback.")
             return
 
         try:
             playback = self.sp.current_playback()
             if playback and playback['is_playing']:
                 self.sp.pause_playback()
-                print("Playback paused.")
+                print("INFO: Playback paused.")
             else:
                 self.sp.start_playback()
-                print("Playback started/resumed.")
+                print("INFO: Playback started/resumed.")
         except spotipy.exceptions.SpotifyException as e:
-            print(f"Spotify API Error toggling playback: {e}")
+            print(f"ERROR: Spotify API Error toggling playback: {e}")
             if "expired token" in str(e).lower() or "invalid_grant" in str(e).lower():
-                print("Current user account token might be invalid or expired. Attempting to re-authenticate current account.")
+                print("INFO: Current user account token might be invalid or expired. Attempting to re-authenticate current account.")
                 self.set_current_account(self.current_account_index)
         except Exception as e:
-            print(f"An unexpected error occurred toggling playback: {e}")
+            print(f"FATAL ERROR: An unexpected error occurred toggling playback: {e}")
