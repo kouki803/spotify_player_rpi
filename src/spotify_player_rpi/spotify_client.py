@@ -1,63 +1,85 @@
 # spotify_client.py
+import json
+import os
+import time
+
 import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
-import spotify_player_rpi.config as config # config.py から認証情報を読み込む
-
-import json
-import os
+import spotify_player_rpi.config as config # config.py からAPI認証情報を読み込む
 
 
 class SpotifyClient:
-    def __init__(self, accounts_file='accounts.json'):
-        self.accounts_file = accounts_file
+    def __init__(self):
+        # accounts.json のパスをconfig.PROJECT_ROOTから構築
+        self.accounts_file = os.path.join(config.PROJECT_ROOT, 'accounts.json')
         self.accounts_data = [] 
         self.current_account_index = -1
-        self.sp = None
-        self.sp_oauth = None
-        self._load_accounts() 
+        self.sp = None # Spotipy Spotify client instance
+        self.sp_oauth = None # Spotipy SpotifyOAuth instance
+        self._load_accounts() # コンストラクタでアカウントデータをロード
 
     def _load_accounts(self):
-        """Loads user account data from the JSON file."""
+        """ユーザーアカウントデータをaccounts.jsonファイルからロードする。"""
         if os.path.exists(self.accounts_file):
             try:
                 with open(self.accounts_file, 'r') as f:
-                    # accounts.json がユーザーアカウントのリストのみを保持する前提
-                    self.accounts_data = json.load(f)
-                print(f"Loaded {len(self.accounts_data)} Spotify user accounts.")
+                    data = json.load(f)
+                    if isinstance(data, list):
+                        self.accounts_data = data
+                    else:
+                        print(f"WARNING: {self.accounts_file} has unexpected format. Expected a list. Resetting to empty list.")
+                        self.accounts_data = []
+                print(f"INFO: Loaded {len(self.accounts_data)} Spotify user accounts.")
+                print(f"DEBUG: Accounts file path: {self.accounts_file}")
+                if self.accounts_data:
+                    print("DEBUG: Loaded accounts data (first entry):")
+                    # 機密情報なので一部だけ表示
+                    first_account = self.accounts_data[0]
+                    print(f"  name: {first_account.get('name')}")
+                    print(f"  access_token (first 5 chars): {first_account.get('access_token', '')[:5]}...")
+                    print(f"  refresh_token (first 5 chars): {first_account.get('refresh_token', '')[:5]}...")
+                    print(f"  expires_at: {first_account.get('expires_at')}")
+                else:
+                    print("DEBUG: accounts.json was loaded but is empty or malformed.")
+
             except json.JSONDecodeError:
-                print(f"Error decoding {self.accounts_file}. Starting with no user accounts.")
+                print(f"ERROR: Could not decode {self.accounts_file}. File might be corrupted. Starting with no user accounts.")
+                self.accounts_data = []
+            except Exception as e: # その他の読み込みエラーも捕捉
+                print(f"ERROR: Unexpected error reading {self.accounts_file}: {e}")
                 self.accounts_data = []
         else:
-            print(f"No {self.accounts_file} found. Starting with no user accounts.")
+            print(f"INFO: No {self.accounts_file} found. Starting with no user accounts.")
             self.accounts_data = []
-        
-        # After loading, check if current_account_index is still valid
-        if self.current_account_index >= len(self.accounts_data):
-            self.current_account_index = 0 if self.accounts_data else -1 
+            
+            # ロード後、現在のcurrent_account_indexが有効範囲内かチェック
+            if self.current_account_index >= len(self.accounts_data):
+                self.current_account_index = 0 if self.accounts_data else -1 
 
     def _save_accounts(self):
-        """Saves current user account data to the JSON file."""
-        with open(self.accounts_file, 'w') as f:
-            json.dump(self.accounts_data, f, indent=4)
-        print("User accounts saved.")
-
+        """現在のユーザーアカウントデータをaccounts.jsonファイルに保存する。"""
+        try:
+            with open(self.accounts_file, 'w') as f:
+                json.dump(self.accounts_data, f, indent=2)
+            print("INFO: User accounts saved successfully.")
+        except Exception as e:
+            print(f"ERROR: Failed to save user accounts to {self.accounts_file}: {e}")
 
     def set_current_account(self, index):
         """
-        Sets the specified user account as the current active account and attempts to authenticate.
-        Client ID/Secretはconfig.pyから自動的に読み込まれる。
-        Returns True on successful authentication, False otherwise.
+        指定されたユーザーアカウントを現在のアクティブアカウントとして設定し、認証を試みる。
+        成功した場合はTrue、失敗した場合はFalseを返す。
         """
-        # アプリケーションキーがconfig.pyからロードされているかここで直接チェック
+        # Client IDとClient Secretが設定されているか確認
         if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
-            print("Spotify Client ID/Secret not set in .env. Cannot authenticate user account.")
+            print("ERROR: Spotify Client ID/Secret not set in .env. Cannot authenticate user account.")
             self.sp = None
             self.sp_oauth = None
             return False
 
-        if not self.accounts_data: # accounts_data は user_accounts のリストになった
-            print("No user accounts available to set.")
+        if not self.accounts_data:
+            print("INFO: No user accounts available to set.")
             self.sp = None
             self.sp_oauth = None
             return False
@@ -66,36 +88,36 @@ class SpotifyClient:
             self.current_account_index = index
             return self._authenticate_current_account()
         else:
-            print(f"Invalid user account index: {index}. Cannot set current account.")
+            print(f"ERROR: Invalid user account index: {index}. Cannot set current account.")
             self.sp = None
             self.sp_oauth = None
             return False
 
     def _authenticate_current_account(self):
         """
-        Attempts to authenticate with the currently selected user account using cached tokens or refreshing.
-        Returns True on successful authentication, False otherwise.
+        現在選択されているユーザーアカウントで、キャッシュされたトークンを使用するか、
+        リフレッシュして認証を試みる。成功した場合はTrue、失敗した場合はFalseを返す。
         """
         if self.current_account_index == -1 or not self.accounts_data:
+            print("ERROR: No current account selected or no accounts data for authentication.")
             self.sp = None
             self.sp_oauth = None
             return False
 
-        user_account_info = self.accounts_data[self.current_account_index] # accounts_data は user_accounts のリストになった
-        user_name = user_account_info.get('name', f"User {self.current_account_index + 1}")
-        print(f"Attempting to authenticate user account: {user_name}")
+        user_account_info = self.accounts_data[self.current_account_index]
+        user_name = user_account_info.get('name', f"Unnamed User {self.current_account_index + 1}")
+        print(f"INFO: Attempting to authenticate user account: '{user_name}'")
 
-        # Client ID と Client Secret を config.py から直接取得
         client_id = config.SPOTIPY_CLIENT_ID
         client_secret = config.SPOTIPY_CLIENT_SECRET
         
         if not client_id or not client_secret:
-            print("App Client ID/Secret missing from .env. Cannot proceed with user authentication.")
+            print("ERROR: App Client ID/Secret missing from .env. Cannot proceed with user authentication.")
             self.sp = None
             self.sp_oauth = None
             return False
 
-        cache_path = os.path.join(os.path.dirname(__file__), f'.spotify_cache_{user_name.replace(" ", "_")}')
+        cache_path = os.path.join(config.PROJECT_ROOT, f'.spotify_cache_{user_name.replace(" ", "_")}')
 
         self.sp_oauth = SpotifyOAuth(
             client_id=client_id, 
@@ -107,41 +129,44 @@ class SpotifyClient:
         )
         
         token_info = self.sp_oauth.get_cached_token()
-
         if token_info:
+            print(f"INFO: Cached token found for '{user_name}'.")
             if self.sp_oauth.is_token_expired(token_info):
-                print(f"Access token for {user_name} expired, refreshing...")
+                print(f"INFO: Access token for '{user_name}' expired, attempting to refresh...")
                 try:
                     token_info = self.sp_oauth.refresh_access_token(token_info['refresh_token'])
+                    print(f"INFO: Token refreshed successfully for '{user_name}'.")
+                    # 更新されたトークン情報をaccounts.jsonに保存
                     user_account_info.update({
                         "access_token": token_info['access_token'],
                         "expires_at": token_info['expires_at'],
-                        "refresh_token": token_info['refresh_token']
+                        "refresh_token": token_info['refresh_token'] # リフレッシュトークンも更新される場合がある
                     })
                     self._save_accounts()
                 except Exception as e:
-                    print(f"Failed to refresh token for {user_name}: {e}")
-                    token_info = None
+                    print(f"ERROR: Failed to refresh token for '{user_name}': {e}")
+                    token_info = None # トークン更新失敗として扱う
             
             if token_info:
                 self.sp = spotipy.Spotify(auth=token_info['access_token'])
-                print(f"Spotify authentication successful for {user_name}.")
+                print(f"SUCCESS: Spotify authentication successful for '{user_name}'.")
                 return True
+        else:
+            print(f"INFO: No cached token found for '{user_name}'. Manual re-authentication required (via Web UI or get_tokens.py).")
         
-        print(f"Authentication failed for {user_name}. Token missing or invalid.")
-        self.sp = None
+        print(f"ERROR: Authentication failed for '{user_name}'. Token missing or invalid after all attempts.")
+        self.sp = None # 認証失敗時はSpotipyクライアントをリセット
         self.sp_oauth = None
         return False
-    
+
     def add_user_account_token(self, user_name, access_token, refresh_token, expires_at):
         """
-        Adds or updates a user account with provided token info.
-        This method is called by the web_server after successful OAuth for a user.
+        ユーザーアカウントを新しいトークン情報で追加または更新する。
+        Webサーバーが認証後に呼び出すメソッド
         """
-        # アプリケーションキーがconfig.pyからロードされているかここで直接チェック
         if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
-            print("Cannot add user account: Spotify Client ID/Secret not set in .env.")
-            return False # 追加できない場合はFalseを返す
+            print("ERROR: Cannot add user account: Spotify Client ID/Secret not set in .env.")
+            return False
 
         new_user_account_data = {
             "name": user_name,
@@ -151,50 +176,54 @@ class SpotifyClient:
         }
         
         found = False
-        for i, acc in enumerate(self.accounts_data): # accounts_data は user_accounts のリストになった
+        for i, acc in enumerate(self.accounts_data):
             if acc.get('name') == user_name:
                 self.accounts_data[i] = new_user_account_data
-                print(f"Updated existing user account: {user_name}")
+                print(f"INFO: Updated existing user account: '{user_name}'.")
                 found = True
                 break
         if not found:
             self.accounts_data.append(new_user_account_data)
-            print(f"Added new user account: {user_name}")
+            print(f"INFO: Added new user account: '{user_name}'.")
         
         self._save_accounts()
-        return True # 正常に追加されたことを示す
+        return True
 
     def delete_user_account(self, index):
-        """Deletes a user account by index and its associated cache file."""
-        if 0 <= index < len(self.accounts_data): # accounts_data は user_accounts のリストになった
-            deleted_user_account_name = self.accounts_data[index].get('name', f"User {index+1}")
+        """ユーザーアカウントを指定したインデックスで削除し、関連するキャッシュファイルも削除する。"""
+        if 0 <= index < len(self.accounts_data):
+            deleted_user_account_name = self.accounts_data[index].get('name', f"Unnamed User {index+1}")
             del self.accounts_data[index]
             self._save_accounts()
 
-            cache_file = os.path.join(os.path.dirname(__file__), f'.spotify_cache_{deleted_user_account_name.replace(" ", "_")}')
+            cache_file = os.path.join(config.PROJECT_ROOT, f'.spotify_cache_{deleted_user_account_name.replace(" ", "_")}')
             if os.path.exists(cache_file):
-                os.remove(cache_file)
-                print(f"Deleted cache file for {deleted_user_account_name}")
-            print(f"Deleted user account: {deleted_user_account_name}")
+                try:
+                    os.remove(cache_file)
+                    print(f"INFO: Deleted cache file for '{deleted_user_account_name}'.")
+                except Exception as e:
+                    print(f"ERROR: Failed to remove cache file {cache_file}: {e}")
+            print(f"INFO: Deleted user account: '{deleted_user_account_name}'.")
             return True
         return False
 
     def switch_to_next_account(self):
-        """Switches to the next user account in the list (for physical button)."""
+        """リスト内の次のユーザーアカウントに切り替える（物理ボタン用）。"""
         if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
-            print("App Client ID/Secret not set in .env. Cannot switch user accounts.")
+            print("ERROR: App Client ID/Secret not set in .env. Cannot switch user accounts.")
             self.sp = None
             self.sp_oauth = None
             return False
 
-        if not self.accounts_data: 
-            print("No user accounts to switch. Add an account first.")
+        if not self.accounts_data:
+            print("INFO: No user accounts to switch. Add an account first.")
             self.sp = None
             self.sp_oauth = None
             return False
         
+        # 次のアカウントのインデックスを計算
         next_index = (self.current_account_index + 1) % len(self.accounts_data)
-        print(f"Attempting to switch to next user account (index: {next_index})...")
+        print(f"INFO: Attempting to switch to next user account (index: {next_index})...")
         return self.set_current_account(next_index)
 
     # get_current_playback, toggle_playback は変更なし (self.sp を利用)

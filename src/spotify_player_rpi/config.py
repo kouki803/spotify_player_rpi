@@ -4,6 +4,11 @@ from dotenv import load_dotenv
 # .env ファイルをロード
 load_dotenv() 
 
+# ProjectのPath
+# poetryのライブラリパスの二階層上をROOTに
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+SELF_LIB_ROOT = os.path.dirname(os.path.abspath(__file__))
+
 # Spotify API Credentials 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
@@ -24,6 +29,8 @@ WEB_SERVER_LIFETIME = 300
 
 if __name__ == '__main__':
     print("--- config.py Debug Test ---")
+    print(f'PROJECT_ROOT: {PROJECT_ROOT}')
+    print(f'SELF_LIB_ROOT: {SELF_LIB_ROOT}')
     print(f"SPOTIPY_CLIENT_ID: {SPOTIPY_CLIENT_ID if SPOTIPY_CLIENT_ID else 'NOT SET'}")
     print(f"SPOTIPY_CLIENT_SECRET: {'***' if SPOTIPY_CLIENT_SECRET else 'NOT SET'}")
     print(f"SPOTIPY_REDIRECT_URI: {SPOTIPY_REDIRECT_URI}")
