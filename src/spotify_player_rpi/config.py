@@ -1,13 +1,13 @@
 import os
 from dotenv import load_dotenv
 
-# .env ファイルをロード
-load_dotenv() 
-
 # ProjectのPath
 # poetryのライブラリパスの二階層上をROOTに
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 SELF_LIB_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+# .env ファイルをロード
+load_dotenv() 
 
 # Spotify API Credentials 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
@@ -20,11 +20,12 @@ if not SPOTIPY_CLIENT_ID or not SPOTIPY_CLIENT_SECRET:
 # Spotify API Scopes
 SCOPE = "user-read-playback-state user-modify-playback-state user-read-currently-playing"
 
-# GPIO Pin Configuration (BCM numbering)
+# Hardware Configuration (BCM numbering, etc)
 BUTTON_PLAY_PAUSE_PIN = 23
 BUTTON_SWITCH_ACCOUNT_PIN = 24
 BUTTON_DEBOUNCE_TIME = 300 # ボタンのチャタリング防止時間 (ms)
-
+DISPLAY_SLEEP_AFTER_SECONDS = 3 #[s] e-ink画面更新のためにディスプレイをアクティブにする時間
+FORCE_DISPLAY_MOCK = True  # Trueならモックディスプレイを使用、Falseなら実機ディスプレイを使用
 
 # Web Server Settings
 WEB_SERVER_LIFETIME = 300

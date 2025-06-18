@@ -4,7 +4,7 @@ import os
 import socket
 
 import qrcode
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw
 
 import spotify_player_rpi.config as config
 from spotify_player_rpi.display_manager import DisplayManager

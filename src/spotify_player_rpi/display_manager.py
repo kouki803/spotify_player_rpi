@@ -2,7 +2,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 from spotify_player_rpi.hardware_controller import HardwareController
-
+from spotify_player_rpi.epd_driver import EpdDriver
+from spotify_player_rpi.types.display_mode import DisplayMode
+from spotify_player_rpi.types.display_infos import DisplayInfos
+from spotify_player_rpi.types.playbackinfo import PlaybackInfo
 
 class DisplayManager:
     IS_RPI = HardwareController.IS_RPI # Raspberry Pi環境かどうかを示すフラグ

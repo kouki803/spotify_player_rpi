@@ -7,7 +7,7 @@ import spotipy
 from spotipy.oauth2 import SpotifyOAuth
 
 import spotify_player_rpi.config as config # config.py からAPI認証情報を読み込む
-from spotify_player_rpi.types import PlaybackInfo
+from spotify_player_rpi.types.playbackinfo import PlaybackInfo
 
 
 class SpotifyClient:
