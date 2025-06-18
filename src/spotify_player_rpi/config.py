@@ -12,7 +12,7 @@ load_dotenv()
 # Spotify API Credentials 
 SPOTIPY_CLIENT_ID = os.getenv('SPOTIPY_CLIENT_ID')
 SPOTIPY_CLIENT_SECRET = os.getenv('SPOTIPY_CLIENT_SECRET')
-SPOTIPY_REDIRECT_URI = 'http://127.0.0.1:8888/callback'
+SPOTIPY_REDIRECT_URI =  os.getenv('SPOTIPY_REDIRECT_URI', 'http://127.0.0.1:8888/callback')
 
 if not SPOTIPY_CLIENT_ID or not SPOTIPY_CLIENT_SECRET:
     raise ValueError("Spotify Client ID and Client Secret must be set in the .env file in the project root.")
