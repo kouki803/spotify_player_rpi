@@ -19,12 +19,12 @@ app = Flask(__name__,
 app.secret_key = os.urandom(24) 
 
 # File paths using config.PROJECT_ROOT
-ACCOUNTS_FILE = os.path.join(config.PROJECT_ROOT, 'accounts.json')
-CURRENT_ACCOUNT_INDEX_FILE = os.path.join(config.PROJECT_ROOT, 'current_account_index.txt')
-SPOTIPY_CACHE_DIR = config.PROJECT_ROOT 
+ACCOUNTS_FILE: str = os.path.join(config.PROJECT_ROOT, 'accounts.json')
+CURRENT_ACCOUNT_INDEX_FILE: str = os.path.join(config.PROJECT_ROOT, 'current_account_index.txt')
+SPOTIPY_CACHE_DIR: str = config.PROJECT_ROOT 
 
 # --- Helper functions for account management ---
-def get_oauth_instance(user_name: str) -> SpotifyOAuth: 
+def get_oauth_instance(user_name: str) -> SpotifyOAuth:
     """
     ユーザー名に基づいてSpotifyOAuthインスタンスを取得または作成します。
     Client IDとClient Secretはconfigから読み込まれます。
@@ -37,7 +37,6 @@ def get_oauth_instance(user_name: str) -> SpotifyOAuth:
     
     # config.pyでClient ID/SecretがNoneになる可能性があるのでチェック
     if client_id is None or client_secret is None:
-        # このエラーはweb_server.pyのルートハンドリングで捕捉されるべきですが、念のため
         raise ValueError("Spotify Client ID/Secret are not configured in .env.")
 
     return SpotifyOAuth(
@@ -50,12 +49,12 @@ def get_oauth_instance(user_name: str) -> SpotifyOAuth:
         listen_hostname='0.0.0.0'
     )
 
-def load_accounts_data_from_file() -> List[Dict[str, Any]]: 
+def load_accounts_data_from_file() -> List[Dict[str, Any]]:
     """ユーザーアカウントデータをaccounts.jsonファイルからロードします。"""
     if os.path.exists(ACCOUNTS_FILE):
         try:
             with open(ACCOUNTS_FILE, 'r') as f:
-                data: Union[List[Dict[str, Any]], Any] = json.load(f) # ロードされるデータの可能性のある型
+                data: Any = json.load(f) # ロードされるデータの可能性のある型
                 if isinstance(data, list):
                     return data
                 else:
@@ -66,33 +65,33 @@ def load_accounts_data_from_file() -> List[Dict[str, Any]]:
             return []
     return []
 
-def save_accounts_data_to_file(user_accounts_data: List[Dict[str, Any]]) -> None:  
-    """ユーザーアカウントデータをaccounts.jsonファイルに保存"""
+def save_accounts_data_to_file(user_accounts_data: List[Dict[str, Any]]) -> None:
+    """ユーザーアカウントデータをaccounts.jsonファイルに保存します。"""
     with open(ACCOUNTS_FILE, 'w') as f:
         json.dump(user_accounts_data, f, indent=4)
     print("User accounts saved via web server.")
 
-def delete_user_account_and_cache(index: int) -> bool:  
+def delete_user_account_and_cache(index: int) -> bool:
     """指定されたインデックスのユーザーアカウントを削除し、関連するSpotipyキャッシュファイルも削除します。"""
     user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()
     if 0 <= index < len(user_accounts):
-        deleted_user_account_name: str = user_accounts[index].get('name', f"User {index+1}")  
+        deleted_user_account_name: str = user_accounts[index].get('name', f"User {index+1}") 
         del user_accounts[index]
         save_accounts_data_to_file(user_accounts)
 
         # 関連するSpotipyキャッシュファイルを削除
-        cache_file: str = os.path.join(SPOTIPY_CACHE_DIR, f'.spotify_cache_{deleted_user_account_name.replace(" ", "_")}')  
+        cache_file: str = os.path.join(SPOTIPY_CACHE_DIR, f'.spotify_cache_{deleted_user_account_name.replace(" ", "_")}') 
         if os.path.exists(cache_file):
             try:
                 os.remove(cache_file)
                 print(f"Deleted cache file for {deleted_user_account_name}")
             except Exception as e:
-                print(f"Error removing cache file {cache_file}: {e}") # 修正: f_name -> cache_file
+                print(f"Error removing cache file {cache_file}: {e}")
         print(f"User account '{deleted_user_account_name}' deleted.")
         return True
     return False
 
-def notify_daemon_current_account_change(index: Optional[int] = None) -> None:  
+def notify_daemon_current_account_change(index: Optional[int] = None) -> None:
     """
     メインデーモンに、現在のアクティブなユーザーアカウントのインデックスを通知します。
     これはcurrent_account_index.txtファイルを通じて行われます。
@@ -108,12 +107,12 @@ def notify_daemon_current_account_change(index: Optional[int] = None) -> None:
     except Exception as e:
         print(f"Error notifying daemon: {e}")
 
-def get_ip_address() -> str:  
+def get_ip_address() -> str:
     """Raspberry PiのローカルIPアドレスを取得します。"""
     try:
-        s: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+        s: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.connect(("8.8.8.8", 80)) 
-        ip_address: str = s.getsockname()[0]  
+        ip_address: str = s.getsockname()[0]
         s.close()
         return ip_address
     except Exception:
@@ -122,13 +121,13 @@ def get_ip_address() -> str:
 
 # --- Flask Routes ---
 @app.route('/')
-def index() -> str:
+def index() -> str: # render_templateはstrを返す
     """メイン設定ページを表示します。"""
-    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()  
+    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()
     
-    app_keys_configured: bool = bool(config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET)  
+    app_keys_configured: bool = bool(config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET)
 
-    current_active_idx: int = -1  
+    current_active_idx: int = -1 
     if os.path.exists(CURRENT_ACCOUNT_INDEX_FILE):
         try:
             with open(CURRENT_ACCOUNT_INDEX_FILE, 'r') as f:
@@ -136,7 +135,7 @@ def index() -> str:
         except (ValueError, IOError):
             pass 
 
-    current_account_name: Optional[str] = None  
+    current_account_name: Optional[str] = None 
     if 0 <= current_active_idx < len(user_accounts):
         current_account_name = user_accounts[current_active_idx].get('name', f"User {current_active_idx+1}")
 
@@ -150,28 +149,26 @@ def index() -> str:
 
 
 @app.route('/add_user_account', methods=['GET', 'POST'])
-def add_user_account() -> Union[Response, str]:
+def add_user_account() -> Union[Response, str]: # redirectはResponse, render_templateはstr
     """新しいSpotifyユーザーアカウントを追加するためのページを表示または認証フローを開始します。"""
     if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
-        # render_templateは最終的に文字列を返すので、strとするか、
-        # あるいはmake_response()で明示的にResponseオブジェクトを返す
         return render_template('error_message.html', message="Client ID/Secret is not set in .env. Please configure it first.", redirect_url=url_for('index'))
 
     if request.method == 'POST':
         user_name: str = request.form['user_name'].strip()
         if not user_name:
-            return make_response("User account name cannot be empty!", 400)
+            return make_response("User account name cannot be empty!", 400) # make_responseはResponseを返す
 
         session['auth_user_name'] = user_name 
 
         sp_oauth: SpotifyOAuth = get_oauth_instance(user_name)
         auth_url: str = sp_oauth.get_authorize_url()
-        return redirect(auth_url)
+        return redirect(auth_url) # redirectはResponseを返す
     
-    return render_template('add_user_account.html') # strを返す
+    return render_template('add_user_account.html') # render_templateはstrを返す
 
 @app.route('/callback')
-def callback() -> Union[str, Response]: 
+def callback() -> Union[Response, str]: # redirectとmake_responseはResponse, render_templateはstr
     """Spotify認証後のコールバックURIを処理します。"""
     user_name: Optional[str] = session.pop('auth_user_name', None) 
     if not user_name:
@@ -180,24 +177,24 @@ def callback() -> Union[str, Response]:
     if not (config.SPOTIPY_CLIENT_ID and config.SPOTIPY_CLIENT_SECRET):
         return make_response("Authentication failed: App Client ID/Secret not set in .env.", 400)
 
-    sp_oauth: SpotifyOAuth = get_oauth_instance(user_name) 
-    code: Optional[str] = request.args.get('code') 
+    sp_oauth: SpotifyOAuth = get_oauth_instance(user_name)
+    code: Optional[str] = request.args.get('code')
 
     if not code:
         error: str = request.args.get('error', 'unknown error') 
-        return make_response(f"Authentication failed: {error}. <a href='{url_for('index')}'>Back to settings</a>", 500)
+        return make_response(f"Authentication failed: {error}. <a href='{url_for('index')}'>Back to settings</a>", 400)
 
     try:
-        token_info: Dict[str, Any] = sp_oauth.get_access_token(code) 
+        token_info: Dict[str, Any] = sp_oauth.get_access_token(code)
         
-        user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file() 
+        user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()
         found_index: int = -1 
         for i, acc in enumerate(user_accounts):
             if acc.get('name') == user_name:
                 found_index = i
                 break
         
-        new_user_account_data: Dict[str, Any] = { 
+        new_user_account_data: Dict[str, Any] = {
             "name": user_name,
             "access_token": token_info['access_token'],
             "refresh_token": token_info['refresh_token'],
@@ -215,7 +212,7 @@ def callback() -> Union[str, Response]:
         
         save_accounts_data_to_file(user_accounts)
         
-        return redirect(url_for('index'))
+        return redirect(url_for('index')) # redirectはResponseを返す
 
     except spotipy.exceptions.SpotifyException as e:
         return make_response(f"Spotify API Error during authentication: {e}. <a href='{url_for('index')}'>Back to settings</a>", 500)
@@ -223,9 +220,9 @@ def callback() -> Union[str, Response]:
         return make_response(f"An unexpected error occurred during authentication: {e}. <a href='{url_for('index')}'>Back to settings</a>", 500)
 
 @app.route('/set_current_account/<int:index>')
-def set_current_account(index: int) -> Response: 
+def set_current_account(index: int) -> Response: # redirectはResponseを返す
     """メインデーモンに、現在アクティブにするユーザーアカウントを通知します。"""
-    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file() 
+    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()
     if 0 <= index < len(user_accounts):
         notify_daemon_current_account_change(index)
         print(f"Set current user account index to {index} via web GUI.")
@@ -234,9 +231,9 @@ def set_current_account(index: int) -> Response:
     return redirect(url_for('index'))
 
 @app.route('/delete_user_account/<int:index>')
-def delete_user_account(index: int) -> Response: 
+def delete_user_account(index: int) -> Response: # redirectはResponseを返す
     """指定されたインデックスのユーザーアカウントを削除します。"""
-    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file() 
+    user_accounts: List[Dict[str, Any]] = load_accounts_data_from_file()
 
     if 0 <= index < len(user_accounts):
         if delete_user_account_and_cache(index):
@@ -261,18 +258,14 @@ def delete_user_account(index: int) -> Response:
 
 # --- Flask Web Server Startup (デバッグ/開発用) ---
 if __name__ == '__main__':
-    # 証明書と秘密鍵のパスを定義 (web_server.pyは src/spotify_eink_display/ にある)
-    # sslディレクトリはプロジェクトルート直下なので、config.PROJECT_ROOT を使う
-    ssl_cert_path: str = os.path.join(config.PROJECT_ROOT, 'ssl', 'server.crt') 
-    ssl_key_path: str = os.path.join(config.PROJECT_ROOT, 'ssl', 'server.key') 
+    ssl_cert_path: str = os.path.join(config.PROJECT_ROOT, 'ssl', 'server.crt')
+    ssl_key_path: str = os.path.join(config.PROJECT_ROOT, 'ssl', 'server.key')
 
-    # SSL証明書ファイルが存在するかチェックし、HTTPSで起動
     if os.path.exists(ssl_cert_path) and os.path.exists(ssl_key_path):
         print("--- web_server.py Debug Test (HTTPS) ---")
-        print(f"Starting Flask web server on https://0.0.0.0:5000") # ポート5000は変わらず
+        print(f"Starting Flask web server on https://0.0.0.0:5000") 
         print("Requires .env with Spotify credentials.")
         
-        # IPアドレスを取得し、HTTPS URLを表示
         def get_local_ip_address() -> str: 
             try:
                 s: socket.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -294,7 +287,6 @@ if __name__ == '__main__':
             ssl_context=(ssl_cert_path, ssl_key_path) 
         )
     else:
-        # SSL証明書ファイルがない場合、HTTPで起動
         print("--- web_server.py Debug Test (HTTP) ---")
         print(f"WARNING: SSL certificate or key not found at {ssl_cert_path} / {ssl_key_path}")
         print("Falling back to HTTP. Redirect URIs for Spotify will likely fail without HTTPS.")
@@ -311,7 +303,7 @@ if __name__ == '__main__':
             except Exception:
                 return "Unknown IP"
         
-        pi_ip = get_local_ip_address() 
+        pi_ip: str = get_local_ip_address() 
         print(f"Starting Flask web server on http://0.0.0.0:5000") 
         print(f"Access via http://{pi_ip}:5000")
         print(f"Or via hostname: http://{socket.gethostname()}.local:5000")
