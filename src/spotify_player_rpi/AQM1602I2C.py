@@ -1,22 +1,11 @@
-# -*- coding: utf-8 -*-
-"""
-AQM1602/AQM0802シリーズ I2C LCDモジュール (ST7032iコントローラー) 用のPythonクラス。
-標準のPCF8574/MCP23008ベースのライブラリでは動作しないAQM固有の拡張コマンドによる
-初期化シーケンスを実装しています。
-
-参照: https://www.denshi.club/make/2016/10/aqmi2clcd1.html
-"""
 import smbus2 as smbus
 import time
 
 # I2C制御データ（アドレスの後の2バイト目）
-# 0x00: 次のバイトはコマンド (RS=0, Co=0)
-# 0x40: 次のバイトは表示データ (RS=1, Co=0)
-CONTROL_CMD = 0x00
-CONTROL_DATA = 0x40
+CONTROL_CMD = 0x00 # 0x00: 次のバイトはコマンド (RS=0, Co=0)
+CONTROL_DATA = 0x40 # 0x40: 次のバイトは表示データ (RS=1, Co=0)
 
 # --- ST7032i/HD44780 コマンド定数 ---
-# 基本コマンド (IS=0時)
 CMD_CLEAR = 0x01
 CMD_HOME = 0x02
 CMD_DISPLAY_ON = 0x0C      # 表示ON, カーソルOFF, 点滅OFF
@@ -39,10 +28,9 @@ class AQM1602I2C:
     """
     def __init__(self, bus_num: int, address: int, cols: int = 16, rows: int = 2, power_5v: bool = True):
         """
-        LCDオブジェクトを初期化します。
-        :param bus_num: I2Cバス番号 (例: Raspberry Piでは 1)
+        :param bus_num: I2Cバス番号
         :param address: I2Cデバイスアドレス (AQMは 0x3E)
-        :param cols: 桁数 (16または8)
+        :param cols: 桁数 (16 or 8)
         :param rows: 行数 (2)
         :param power_5v: Trueなら5V電源用設定 (0x51), Falseなら3.3V用設定 (0x56)
         """
@@ -55,25 +43,25 @@ class AQM1602I2C:
         try:
             self.bus = smbus.SMBus(self.bus_num)
         except Exception as e:
-            print(f"I2Cバスの初期化に失敗しました: {e}")
+            print(f"I2Cバスの初期化に失敗: {e}")
             raise
 
         self._init_lcd()
 
     def _write_cmd(self, cmd: int):
-        """I2Cを通じてコマンドをLCDに書き込みます (RS=0)"""
+        """I2Cを通じてコマンドをLCDに書き込み (RS=0)"""
         # [アドレス], [制御バイト=0x00], [コマンドバイト]
         self.bus.write_i2c_block_data(self.address, CONTROL_CMD, [cmd])
         time.sleep(0.00005) # 短いディレイ
 
     def _write_data(self, data: int):
-        """I2Cを通じて表示データをLCDに書き込みます (RS=1)"""
+        """I2Cを通じて表示データをLCDに書き込み(RS=1)"""
         # [アドレス], [制御バイト=0x40], [データバイト]
         self.bus.write_i2c_block_data(self.address, CONTROL_DATA, [data])
         time.sleep(0.00005) # 短いディレイ
 
     def _init_lcd(self):
-        """記事に基づいたAQM独自の初期化シーケンスを実行します。"""
+        """AQM独自の初期化シーケンスを実行"""
         print("Initializing AQM LCD with extended commands...")
 
         # (0) 電源投入直後の待機 (145ms以上)
@@ -164,27 +152,22 @@ class AQM1602I2C:
                     self._write_data(ord(char))
                     col += 1
 
-# --- 使用例 ---
+
 if __name__ == "__main__":
-    # 環境に合わせてI2Cバス番号とアドレスを設定してください
     I2C_BUS = 1 
     DEVICE_ADDRESS = 0x3E 
 
     try:
-        # 5V電源でLCDオブジェクトを作成
         lcd = AQM1602I2C(I2C_BUS, DEVICE_ADDRESS, cols=16, rows=2, power_5v=True)
 
-        # 最初のメッセージ
         lcd.message("AQM1602 OK!\nReady to Use!")
         time.sleep(3)
         
-        # 2行目のテスト
         lcd.clear()
         lcd.set_cursor(0, 0)
         lcd.message("Address: 0x3E")
         
         lcd.set_cursor(0, 1)
-        # 日本語は表示できませんが、文字コードが通るか確認
         lcd.message("Python Test...") 
         
         time.sleep(3)

@@ -525,6 +525,22 @@ files = [
 ]
 
 [[package]]
+name = "smbus2"
+version = "0.5.0"
+description = "smbus2 is a drop-in replacement for smbus-cffi/smbus-python in pure Python"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "smbus2-0.5.0-py2.py3-none-any.whl", hash = "sha256:1a15c3b9fa69357beb038cc0b5d37939702f8bfde1ddc89ca9f17d8461dbe949"},
+    {file = "smbus2-0.5.0.tar.gz", hash = "sha256:4a5946fd82277870c2878befdb1a29bb28d15cda14ea4d8d2d54cf3d4bdcb035"},
+]
+
+[package.extras]
+docs = ["sphinx (>=1.5.3)"]
+qa = ["flake8"]
+
+[[package]]
 name = "spidev"
 version = "3.7"
 description = "Python bindings for Linux SPI access through spidev"
@@ -616,4 +632,4 @@ type = ["pytest-mypy"]
 [metadata]
 lock-version = "2.1"
 python-versions = "==3.9.11"
-content-hash = "81bae1d587f7567ad336c0e388cc21bc8648a4c7faeec47fdd24a49ba1f27531"
+content-hash = "33d4b911032f4ccf4ab55ab5e73a06063e009243114a5f7e40b7b7e466a14220"
