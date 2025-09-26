@@ -22,11 +22,17 @@ CMD_FOLLOWER_ON = 0x6C     # フォロワー回路ON
 # DDRAMアドレス設定 (表示位置の指定)
 CMD_DDRAM_SET = 0x80
 
+
+# default I2C settgins
+I2C_BUS = 1 
+DEVICE_ADDRESS = 0x3E 
+
+
 class AQM1602I2C:
     """
     AQMシリーズI2C LCDモジュール制御クラス
     """
-    def __init__(self, bus_num: int, address: int, cols: int = 16, rows: int = 2, power_5v: bool = True):
+    def __init__(self, bus_num: int = I2C_BUS, address: int = DEVICE_ADDRESS, cols: int = 16, rows: int = 2, power_5v: bool = True,):
         """
         :param bus_num: I2Cバス番号
         :param address: I2Cデバイスアドレス (AQMは 0x3E)
