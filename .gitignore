@@ -3,3 +3,4 @@ accounts.json
 .venv
 .env
 .spotify_cache_*
+ssl
