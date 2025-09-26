@@ -1,8 +1,28 @@
 from dataclasses import dataclass
 from typing import Optional
-from .display_mode import DisplayMode
-from .playbackinfo import PlaybackInfo
 from PIL import Image
+
+
+from enum import Enum
+
+
+@dataclass
+class PlaybackInfo:
+    """現在再生中のSpotify楽曲情報を表すデータクラス。"""
+    track_name: str
+    artist_name: str
+    track_url: Optional[str] = None  # QRコード用など、オプションな情報
+    is_playing: bool = False
+
+class DisplayMode(Enum):
+    """ディスプレイの現在の状態や表示内容のカテゴリを示す列挙型。"""
+    OFFLINE = "OFFLINE"                 # 初期設定が未完了、またはネットワークエラーなど
+    NO_USER_ACCOUNT = "NO_USER_ACCOUNT" # アプリキーはあるがユーザーアカウントがない
+    STOPPED = "STOPPED"                 # 音楽が停止中
+    PLAY_PAUSE = "PLAY/PAUSE"           # 音楽再生中
+    SETTING = "SETTING"                 # Web UI (設定画面) へのアクセスを促す
+    ERROR = "ERROR"                     # その他のエラー表示
+
 
 @dataclass
 class DisplayInfos:
