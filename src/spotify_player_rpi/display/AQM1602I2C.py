@@ -34,8 +34,8 @@ class AQM1602I2C:
     """
     def __init__(self, bus_num: int = I2C_BUS, address: int = DEVICE_ADDRESS, cols: int = 16, rows: int = 2, power_5v: bool = True,):
         """
-        :param bus_num: I2Cバス番号
-        :param address: I2Cデバイスアドレス (AQMは 0x3E)
+        :param bus_num: I2Cバス番号. default 1 (Raspberry Piの通常I2Cバス)
+        :param address: I2Cデバイスアドレス (AQMは 0x3E) ,default 0x3E
         :param cols: 桁数 (16 or 8)
         :param rows: 行数 (2)
         :param power_5v: Trueなら5V電源用設定 (0x51), Falseなら3.3V用設定 (0x56)
@@ -50,7 +50,6 @@ class AQM1602I2C:
             self.bus = smbus.SMBus(self.bus_num)
         except Exception as e:
             print(f"I2Cバスの初期化に失敗: {e}")
-            raise
 
         self._init_lcd()
 

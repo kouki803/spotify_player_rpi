@@ -28,3 +28,6 @@ def main():
         display_text = "No track is\ncurrently playing."
     
     lcd.message(display_text)
+
+if __name__ == "__main__":
+    main()
