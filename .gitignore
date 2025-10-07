@@ -1,0 +1,7 @@
+__pycache__/
+
+accounts.json
+.venv
+.env
+.spotify_cache_*
+ssl
