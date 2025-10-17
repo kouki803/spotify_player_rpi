@@ -1,9 +1,23 @@
 from PIL import Image
 from spotify_player_rpi.config import AppConfig
 
-# --- Mock Implementation ---
+class LedControllerBase:
+    """LEDマトリックスコントローラクラスの基底クラス"""
+    def initialize_matrix(self):
+        """LEDマトリックスの初期化を行う"""
+        raise NotImplementedError
 
-class LedControllerMock:
+    def update_display(self, image: Image.Image):
+        """Pillow ImageをLEDマトリックスに表示する"""
+        raise NotImplementedError
+
+    def terminate(self):
+        """ハードウェアリソースを解放する"""
+        raise NotImplementedError
+
+
+# --- Mock Implementation ---
+class LedControllerMock(LedControllerBase):
     from pathlib import Path
     import datetime as dt
     OUTPUT_PATH = Path(".log")
@@ -36,7 +50,7 @@ class LedControllerMock:
 
 # --- Real Implementation (Placeholder) ---
 
-class LedController:
+class LedController(LedControllerBase):
     """HUB75 LEDマトリックスを制御する"""
     def __init__(self):
         # TODO: hzeller/rpi-rgb-led-matrix のインポートと設定
