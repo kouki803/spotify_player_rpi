@@ -5,3 +5,4 @@ accounts.json
 .env
 .spotify_cache_*
 ssl
+.log
