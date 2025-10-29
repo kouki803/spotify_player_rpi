@@ -74,7 +74,7 @@ class LedController(LedControllerBase):
         
         # ハードウェア性能と表示品質の設定
         options.gpio_slowdown = 4 # Zero W/2 W ではGPIOタイミング調整が必要なことが多い
-        options.hardware_mapping = 'rgb-matrix' # Adafruit HAT/Bonnetがない場合の標準マッピング
+        options.hardware_mapping = 'regular'
         options.disable_hardware_pulsing = True # RPi 2/3/4/5では推奨されることが多い
         
         # その他の表示品質
@@ -129,12 +129,12 @@ class LedController(LedControllerBase):
 
 if __name__ == "__main__":
     from PIL import Image, ImageDraw
-    print("--- LedController Mock Demo Test ---")
+    import time
+    print("--- LedController REAL Hardware Test ---")
     
-    # AppConfigが定義されている前提で、Mockの選択を強制
-    is_mock = True  
+    # 💡 Mockの選択を False に設定
+    is_mock = False  
     
-    # 依存するAppConfigのサイズ情報を読み込み
     MATRIX_W = AppConfig.MATRIX_WIDTH
     MATRIX_H = AppConfig.MATRIX_HEIGHT
 
@@ -144,34 +144,46 @@ if __name__ == "__main__":
     # 1. 初期化とインスタンス生成
     try:
         controller = ControllerCls()
-        controller.initialize_matrix()
+        # 💡 initialize_matrix で GPIO へのアクセスとマトリックスの準備を試行
+        controller.initialize_matrix() 
+    except RuntimeError as e:
+        # initialize_matrix 内で捕捉された重要なエラー（権限など）を表示
+        print(f"[FATAL ERROR] REAL Initialization failed. Ensure 'sudo' is used and wiring is correct: {e}")
+        exit(1)
     except Exception as e:
-        print(f"[FAIL] Initialization failed: {e}")
+        print(f"[FAIL] Unexpected initialization error: {e}")
         exit(1)
 
-    # 2. テスト用画像の作成
-    # 32x64サイズのシンプルな赤色の画像を作成
+
+    # 2. テスト用画像の作成 (緑色の背景と中央にテキスト)
     try:
-        test_image = Image.new("RGB", (MATRIX_W, MATRIX_H), color=(255, 0, 0))
+        # Spotifyカラーである緑色の背景
+        test_image = Image.new("RGB", (MATRIX_W, MATRIX_H), color=(30, 215, 96)) 
         draw = ImageDraw.Draw(test_image)
-        # 中央にテストテキストを描画
-        draw.text((5, 10), "TEST FRAME", fill=(255, 255, 255))
+        
+        # 中央にテストテキストを描画 (白文字)
+        draw.text((5, 10), "REAL TEST OK", fill=(255, 255, 255))
     except Exception as e:
         print(f"[FAIL] Failed to create test image: {e}")
         exit(1)
 
     # 3. 表示機能の確認
-    print("\n[Action] Sending test image to controller...")
+    print("\n[Action] Sending test image to physical matrix...")
     try:
-        controller.update_display(test_image)
-        print("[SUCCESS] update_display called. Check for 'led_matrix_...' in .log folder (Mock).")
+        # 💡 ハードウェアに画像を表示
+        controller.update_display(test_image) 
+        print("[SUCCESS] Image sent to matrix. Check the display for a GREEN screen with WHITE text.")
+        
+        # ユーザーが確認できるように数秒待機
+        time.sleep(5) 
+        
     except Exception as e:
         print(f"[FAIL] update_display failed: {e}")
         
     # 4. 終了処理の確認
-    print("\n[Action] Calling terminate...")
+    print("\n[Action] Calling terminate to clear screen...")
     try:
         controller.terminate()
-        print("[SUCCESS] LedController terminated cleanly.")
+        print("[SUCCESS] LedController terminated and matrix cleared.")
     except Exception as e:
         print(f"[FAIL] Terminate failed: {e}")
