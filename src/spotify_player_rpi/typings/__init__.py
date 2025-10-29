@@ -1,7 +1,7 @@
 from .songs_info import SongInfo
-from .tokusyu_moji import BottonsCoord
+from .tokusyu_moji import TokusyuMoji
 
 all = [
     SongInfo,
-    BottonsCoord,
+    TokusyuMoji,
 ]

@@ -22,7 +22,7 @@ class ContentsRowConfig:
 class MatrixImager:
     # -------------------------------------------------------------
     # 定数と初期化
-    # -------------------------------------------------------------
+    # ------------------------------------------------------------- 
     
     # 表示色の定数定義
     COLOR_SPOTIFY_GREEN = (30, 215, 96)
@@ -92,11 +92,12 @@ class MatrixImager:
 
         for config in self.layout_configs:
             
-            # S行の特殊処理を最初にチェック (contentsリストで判断)
+            # S行の特殊処理
             if config.SPEC.hight == RowHeight.S:
                 self._draw_fixed_status_line(draw, config, self.current_song_info)
+                self._draw_play_icon(frame, self.current_song_info, config)
             else:
-                # スクロール/非スクロールのコンテンツ行
+                # スクロール可のコンテンツ行
                 self._draw_content_line(draw, config, self.current_song_info)
             
         return frame
@@ -190,15 +191,22 @@ class MatrixImager:
         bar_y_top = config.Y_START + (config.SPEC.hight.value // 2) - 1
         bar_y_bottom = config.Y_START + (config.SPEC.hight.value // 2) + 1
         bar_width = progress_ratio(info, self.WIDTH - PLAY_STOP_ICON_WIDTH)
-        
-        # 再生ステータスアイコンの描画
-        # [TODO]: アイコン画像を使うように変更する
-        # rectangle [top-left-x, top-left-y, bottom-right-x, bottom-right-y]
+
+        # [Hint] rectangle [top-left-x, top-left-y, bottom-right-x, bottom-right-y]
         draw.rectangle([8, bar_y_top, self.WIDTH - 1, bar_y_bottom], fill=self.COLOR_BG) # BACK GROUND
         draw.rectangle([8, bar_y_top, bar_width - 1, bar_y_bottom], fill=self.COLOR_PROGRESS_BAR) # PROGRESS BAR
+        
 
-        draw.
-
+    # 再生ステータスアイコンの描画
+    def _draw_play_icon(self, frame: Image.Image, info: SongInfo, config: ContentsRowConfig):
+        if info.title is None:
+            icon = Image.fromarray(TokusyuMoji.STOP_MAP)
+        else:
+            if info.is_playing:
+                icon = Image.fromarray(TokusyuMoji.PLAY_MAP)
+            else:
+                icon = Image.fromarray(TokusyuMoji.PAUSE_MAP)
+        frame.paste(icon, box=(0, config.Y_START))
 
 
 
