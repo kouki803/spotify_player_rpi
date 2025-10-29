@@ -6,7 +6,8 @@ from dataclasses import dataclass
 
 # config.py, types.songs_info.pyからのインポート
 from spotify_player_rpi.config import AppConfig, RowType, DISPLAY_ORDER, RowHeight
-from spotify_player_rpi.typings.songs_info import SongInfo 
+from spotify_player_rpi.typings.songs_info import SongInfo
+from spotify_player_rpi.typings.tokusyu_moji import TokusyuMoji
 
 
 @dataclass
@@ -190,12 +191,15 @@ class MatrixImager:
         bar_y_bottom = config.Y_START + (config.SPEC.hight.value // 2) + 1
         bar_width = progress_ratio(info, self.WIDTH - PLAY_STOP_ICON_WIDTH)
         
+        # 再生ステータスアイコンの描画
+        # [TODO]: アイコン画像を使うように変更する
         # rectangle [top-left-x, top-left-y, bottom-right-x, bottom-right-y]
         draw.rectangle([8, bar_y_top, self.WIDTH - 1, bar_y_bottom], fill=self.COLOR_BG) # BACK GROUND
         draw.rectangle([8, bar_y_top, bar_width - 1, bar_y_bottom], fill=self.COLOR_PROGRESS_BAR) # PROGRESS BAR
 
-        # 再生ステータスアイコンの描画
-        # [TODO]: アイコン画像を使うように変更する
+        draw.
+
+
 
 
     def _render_error_frame(self, message: str, color: tuple) -> Image.Image:
