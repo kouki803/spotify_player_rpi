@@ -7,7 +7,7 @@ from dataclasses import replace
 # --- Mock Implementation ---
 
 class SpotifyClientMock:
-    def __init__(self, auth):
+    def __init__(self, auth=SpotifyAuth()):
         self.scenarios = self._load_scenarios()
         self.current_index = 0
         self.auth = auth

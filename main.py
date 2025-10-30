@@ -7,18 +7,19 @@ from spotify_player_rpi.typings import SongInfo
 
 class MainApp:
     def __init__(self):
+        self.auth = SpotifyAuth()
+
         # クラスの動的選択
-        self.spotifyclient = SpotifyClientMock(auth=self.auth) if AppConfig.USE_MOCK_SPOTIFY else SpotifyClient(auth=self.auth)
+        self.spotifyclient = SpotifyClientMock() if AppConfig.USE_MOCK_SPOTIFY else SpotifyClient(auth=self.auth)
         self.led_controller: LedControllerBase = LedControllerMock() if AppConfig.USE_MOCK_LED else LedController()
 
-        self.auth = SpotifyAuth()
 
         # MatrixImagerの初期化 ()
         self.imager = MatrixImager(display_order=DISPLAY_ORDER)
 
         # 状態管理
         self.last_spotify_update_time = 0
-        self.current_song_info: SongInfo
+        self.current_song_info: SongInfo = self.spotifyclient.get_current_track() 
 
     def _check_and_update_spotify_info(self):
         """Spotifyから情報を取得し、MatrixImagerを更新する"""

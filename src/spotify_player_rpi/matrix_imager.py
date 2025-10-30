@@ -175,7 +175,7 @@ class MatrixImager:
     def _draw_fixed_status_line(self, draw: ImageDraw.ImageDraw, config: ContentsRowConfig, info: SongInfo):
         """固定のステータス行 (S行) を描画する（プログレスバー、アイコンなど）"""
 
-        PLAY_STOP_ICON_WIDTH = 8
+        PLAY_STOP_ICON_WIDTH: int = 8
         
         # 進捗の外挿計算 (info.progress_ms, info.duration_ms, info.retrieved_atを使用)
         def progress_ratio(info: SongInfo, bar_wid: int) -> int: # {bar_wid}段階で返す
