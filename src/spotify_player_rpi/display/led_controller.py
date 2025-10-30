@@ -104,14 +104,14 @@ class LedController(LedControllerBase):
         # Pillow画像をRGB形式に変換
         # RGBMatrixのSetImageメソッドはPillow Imageを受け取り、マトリックスに表示
         # Note: image.convert('RGB') はMatrixImager側で処理される場合もあるが、安全のためここで実施
-        display_image = image.convert('RGB')
+        image = image.convert('RGB')
         
         # MatrixImagerの出力サイズとマトリックスのサイズが一致するかチェック
-        if display_image.size != (self.matrix.width, self.matrix.height):
-             raise ValueError(f"Image size mismatch: Expected {self.matrix.width}x{self.matrix.height}, got {display_image.size}")
+        if image.size != (self.matrix.width, self.matrix.height):
+             raise ValueError(f"Image size mismatch: Expected {self.matrix.width}x{self.matrix.height}, got {image.size}")
 
         try:
-            self.matrix.SetImage(display_image)
+            self.matrix.SetImage(image)
         except Exception as e:
             print(f"[Error] Failed to set image to matrix: {e}")
             # エラー発生時は描画をスキップするが、プロセスは継続させる
