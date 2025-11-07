@@ -55,7 +55,7 @@ class MatrixImager:
         y0:int = 0 
         for i, row in enumerate(display_order):
             try:    
-                font = ImageFont.truetype(row.font_path, row.hight.value)
+                font: Union[ImageFont.FreeTypeFont, ImageFont.ImageFont] = ImageFont.truetype(row.font_path, row.hight.value)
             except IOError:
                 print(f"[ERROR] Could not load font from: {row.font_path}. Using default.")
                 font = ImageFont.load_default()            

@@ -5,7 +5,7 @@ from enum import Enum
 from pathlib import Path
 from dataclasses import dataclass
 
-from spotify_player_rpi.typings.songs_info import SongInfo, SongsInfoType
+from spotify_player_rpi.typings.songs_info import SongsInfoType
 
 # .envファイルを読み込む
 load_dotenv()
