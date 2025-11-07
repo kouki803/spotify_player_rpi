@@ -275,6 +275,7 @@ if __name__ == "__main__":
     
     imager.set_song_info(test_info)
     led = LedController()
+    led.initialize_matrix()
 
     for _ in range(100):
         frame = imager.draw_next_frame()
