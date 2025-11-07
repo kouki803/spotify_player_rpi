@@ -2,12 +2,13 @@ from PIL import Image, ImageDraw, ImageFont
 from typing import Union
 import time
 from dataclasses import dataclass
-
+from pathlib import Path
 
 # config.py, types.songs_info.pyからのインポート
 from spotify_player_rpi.config import AppConfig, RowType, DISPLAY_ORDER, RowHeight
 from spotify_player_rpi.typings.songs_info import SongInfo
 from spotify_player_rpi.typings.tokusyu_moji import TokusyuMoji
+
 
 
 @dataclass
@@ -208,6 +209,17 @@ class MatrixImager:
                 icon = Image.fromarray(TokusyuMoji.PAUSE_MAP)
         frame.paste(icon, box=(0, config.Y_START))
 
+    def draw_picture_frame(self, path: Path) -> Image.Image:
+        """画像をそのまま表示するフレームを生成するパブリックメソッド"""
+        try:
+            img = Image.open(path).convert("RGB")
+            img = img.resize((self.WIDTH, AppConfig.MATRIX_HEIGHT))
+            return img
+        except Exception as e:
+            print(f"[Error] Failed to load picture from {path}: {e}")
+            return self._render_error_frame("Image Load Error", color=self.COLOR_PAUSE_ORANGE)
+        
+
 
 
     def _render_error_frame(self, message: str, color: tuple) -> Image.Image:
@@ -264,8 +276,14 @@ if __name__ == "__main__":
     imager.set_song_info(test_info)
     led = LedController()
 
-    for _ in range(300):
+    for _ in range(100):
         frame = imager.draw_next_frame()
         frame.show()
+        led.update_display(frame)
+        time.sleep(0.1)
+
+    pic_path = Path(input("Enter image path for picture frame test: "))
+    for _ in range(200):
+        frame = imager.draw_picture_frame(pic_path)
         led.update_display(frame)
         time.sleep(0.1)
