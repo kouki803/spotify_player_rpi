@@ -19,3 +19,10 @@ build-backend = "setuptools.build_meta"
 
 [tool.uv]
 package = true 
+
+[tool.mypy.overrides]
+module = [
+    "rgbmatrix",
+    "spotify_player_rpi",
+]
+ignore_missing_imports = true
