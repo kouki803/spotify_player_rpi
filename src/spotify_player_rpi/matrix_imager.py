@@ -122,7 +122,8 @@ class MatrixImager:
             # 1. SongInfoから属性値を安全に取得
             content = getattr(info, attr_name, None)
             
-            if content is None: continue 
+            if content is None:
+                continue 
             
             # 2. 型に基づき描画を振り分ける
             if isinstance(content, str):
