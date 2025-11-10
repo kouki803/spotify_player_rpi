@@ -285,7 +285,8 @@ if __name__ == "__main__":
         time.sleep(0.1)
 
     pic_path = Path(input("Enter image path for picture frame test: "))
+    frame = imager.draw_picture_frame(pic_path)
+
     for _ in range(200):
-        frame = imager.draw_picture_frame(pic_path)
         led.update_display(frame)
         time.sleep(0.1)
