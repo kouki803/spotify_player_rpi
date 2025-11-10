@@ -259,8 +259,11 @@ class MatrixImager:
 if __name__ == "__main__":
     # 簡易テストコード
     from spotify_player_rpi.typings.songs_info import SongInfo
-    from spotify_player_rpi.config import RowType
-    from spotify_player_rpi.display.led_controller import LedControllerMock as LedController
+    from spotify_player_rpi.config import RowType, AppConfig
+    if AppConfig.USE_MOCK_LED:
+        from spotify_player_rpi.display.led_controller import LedControllerMock as LedController
+    else:
+        from spotify_player_rpi.display.led_controller import LedController
 
     imager = MatrixImager(display_order=DISPLAY_ORDER)
     
